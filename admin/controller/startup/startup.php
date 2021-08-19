@@ -11,7 +11,18 @@ class ControllerStartupStartup extends Controller {
 				$this->config->set($setting['key'], json_decode($setting['value'], true));
 			}
 		}
-		
+
+		// Set time zone
+		if ($this->config->get('config_timezone')) {
+			date_default_timezone_set($this->config->get('config_timezone'));
+
+			// Sync PHP and DB time zones.
+			$this->db->query("SET time_zone = '" . $this->db->escape(date('P')) . "'");
+		}
+
+		// Theme
+		$this->config->set('template_cache', $this->config->get('developer_theme'));
+				
 		// Language
 		$query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "language` WHERE code = '" . $this->db->escape($this->config->get('config_admin_language')) . "'");
 		
@@ -26,9 +37,6 @@ class ControllerStartupStartup extends Controller {
 		
 		// Customer
 		$this->registry->set('customer', new Cart\Customer($this->registry));
-		
-		// Affiliate
-		$this->registry->set('affiliate', new Cart\Affiliate($this->registry));
 
 		// Currency
 		$this->registry->set('currency', new Cart\Currency($this->registry));
@@ -57,8 +65,5 @@ class ControllerStartupStartup extends Controller {
 		
 		// Encryption
 		$this->registry->set('encryption', new Encryption($this->config->get('config_encryption')));
-		
-		// OpenBay Pro
-		$this->registry->set('openbay', new Openbay($this->registry));					
 	}
 }
